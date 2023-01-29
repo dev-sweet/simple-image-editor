@@ -87,12 +87,19 @@ const Main = () => {
     setRange(image[prop.name]);
   };
 
+  // handle the range of a property
   const handleRange = (e) => {
     setRange(e.target.value);
     setImage({ ...image, [e.target.name]: e.target.value });
   };
 
-  // const changValueOfPropery = (value) => {};
+  // handle rotate left
+  const handleRotateLeft = () => {
+    setImage({ ...image, Rotate: Rotate - 90 });
+  };
+  const handleRotateRight = () => {
+    setImage({ ...image, Rotate: Rotate + 90 });
+  };
   return (
     <div className='main'>
       <div className='editor-board'>
@@ -136,10 +143,10 @@ const Main = () => {
               <div className='rotate-and-flip'>
                 <label htmlFor=''>Rotate & Flip</label>
                 <div className='icons'>
-                  <button>
+                  <button onClick={handleRotateLeft}>
                     <AiOutlineRotateLeft />
                   </button>
-                  <button>
+                  <button onClick={handleRotateRight}>
                     <AiOutlineRotateRight />
                   </button>
                   <button>

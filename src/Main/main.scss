@@ -49,8 +49,10 @@
                 background-color: rgb(18, 45, 118);
                 color: #edf2ff;
               }
-              .edit-btn.disabled {
+              .edit-btn[disabled] {
                 opacity: 0.7;
+                background-color: #ababab;
+                color: white;
               }
             }
           }
