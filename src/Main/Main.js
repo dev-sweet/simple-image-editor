@@ -4,6 +4,8 @@ import { AiOutlineRotateLeft, AiOutlineRotateRight } from "react-icons/ai";
 import { CgEditFlipH, CgEditFlipV } from "react-icons/cg";
 import { ImUndo, ImRedo } from "react-icons/im";
 import { RiImageAddLine } from "react-icons/ri";
+import ReactCrop from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 const Main = () => {
   // states
   // image states (all image property here)
@@ -41,6 +43,12 @@ const Main = () => {
 
   // state for range
   const [range, setRange] = useState(image.Brightness);
+
+  // declare a state for react crop
+  const [crop, setCrop] = useState("");
+
+  // image details
+  const [imageDetails, setImageDetails] = useState("");
 
   // filters property of image
   const filters = [
@@ -100,6 +108,59 @@ const Main = () => {
   const handleRotateRight = () => {
     setImage({ ...image, Rotate: Rotate + 90 });
   };
+  const handleFlipV = () => {
+    setImage({ ...image, Vertical: Vertical === 1 ? -1 : 1 });
+  };
+  const handleFlipH = () => {
+    setImage({ ...image, Horizontal: Horizontal === 1 ? -1 : 1 });
+  };
+
+  const handleCrop = () => {
+    const canvas = document.createElement("canvas");
+    const scaleX = imageDetails.naturalWidth / imageDetails.width;
+    const scaleY = imageDetails.naturalHeight / imageDetails.height;
+    canvas.width = crop.width;
+    canvas.height = crop.height;
+
+    const context = canvas.getContext("2d");
+    context.drawImage(
+      imageDetails,
+      crop.x * scaleX,
+      crop.y * scaleY,
+      crop.width * scaleX,
+      crop.height * scaleY,
+      0,
+      0,
+      crop.width,
+      crop.height
+    );
+    const baseUrl = canvas.toDataURL("image/jpg");
+    setImage({ ...image, url: baseUrl });
+  };
+
+  // handle save
+  const handleSave = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = crop.width;
+    canvas.height = crop.height;
+    const context = canvas.getContext("2d");
+    context.filter = `brightness(${Brightness}%) sepia(${Sepia}%) grayscale(${Grayscale}%) contrast(${Contrast}%) saturate(${Saturate}%) hue-rotate(${HueRotate}deg)`;
+    context.translate(canvas.width / 2, canvas.height / 2);
+    context.rotate((image.rotate * Math.PI) / 180);
+    context.scale(image.Vertical, image.Horizontal);
+
+    context.drawImage(
+      imageDetails,
+      canvas.width / 2,
+      canvas.height / 2,
+      canvas.width,
+      canvas.height
+    );
+    const link = document.createElement("a");
+    link.download = "edited_image.jpg";
+    link.href = canvas.toDataURL();
+    link.click();
+  };
   return (
     <div className='main'>
       <div className='editor-board'>
@@ -149,10 +210,10 @@ const Main = () => {
                   <button onClick={handleRotateRight}>
                     <AiOutlineRotateRight />
                   </button>
-                  <button>
+                  <button onClick={handleFlipV}>
                     <CgEditFlipH />
                   </button>
-                  <button>
+                  <button onClick={handleFlipH}>
                     <CgEditFlipV />
                   </button>
                 </div>
@@ -160,20 +221,29 @@ const Main = () => {
             </div>
             <div className='save-and-reset'>
               <button className='reset'>Reset</button>
-              <button className='save'>Save</button>
+              <button onClick={handleSave} className='save'>
+                Save
+              </button>
             </div>
           </div>
           <div className='select-image-area'>
             <div className='image'>
               {image?.url ? (
-                <img
-                  style={{
-                    filter: `brightness(${Brightness}%) sepia(${Sepia}%) grayscale(${Grayscale}%) contrast(${Contrast}%) saturate(${Saturate}%) hue-rotate(${HueRotate}deg)`,
-                    transform: `rotate(${Rotate}deg) scale(${Vertical}) scale(${Horizontal})`,
-                  }}
-                  src={url}
-                  alt=''
-                />
+                <ReactCrop
+                  style={{ width: "80%" }}
+                  crop={crop}
+                  onChange={(c) => setCrop(c)}
+                >
+                  <img
+                    style={{
+                      filter: `brightness(${Brightness}%) sepia(${Sepia}%) grayscale(${Grayscale}%) contrast(${Contrast}%) saturate(${Saturate}%) hue-rotate(${HueRotate}deg)`,
+                      transform: `rotate(${Rotate}deg) scale(${Vertical},${Horizontal})`,
+                    }}
+                    onLoad={(e) => setImageDetails(e.currentTarget)}
+                    src={url}
+                    alt=''
+                  />
+                </ReactCrop>
               ) : (
                 <label htmlFor='choose'>
                   <span className='select-image'>
@@ -191,7 +261,9 @@ const Main = () => {
               <button className='redo'>
                 <ImRedo />
               </button>
-              <button className='crop'>Crop Image</button>
+              <button onClick={handleCrop} disabled={!crop} className='crop'>
+                Crop Image
+              </button>
 
               <label className='choose' htmlFor='choose'>
                 Choose Image
